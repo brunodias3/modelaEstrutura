@@ -19,6 +19,7 @@ GLint view_w, view_h;
 float coordX = 0, coordY = 0;
 float lado = 20;
 float zAtual = -1;
+GLdouble viewX = 0.0, viewY = 0.0, viewZ = -1.0;
 vector < pair<int, forma> > formas;
 
 
@@ -104,16 +105,16 @@ void Inicializa (void)
     glLoadIdentity();
     glFrustum (-win, win, -win, win, 1, win);
     glMatrixMode (GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(viewX,viewY,viewZ,0.0,0.0,-1.0, 0.0,1.0,0.0);    
+
 }
 
 void Desenha(void)
 {
-     glMatrixMode(GL_MODELVIEW);
-     glLoadIdentity();
-                   
-     glClear(GL_COLOR_BUFFER_BIT);
-     
-
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glClear(GL_COLOR_BUFFER_BIT);                
     for(int i=0; i<formas.size(); i++){
         if(formas[i].first == 0){
             DesenhaBloco(i);
@@ -166,6 +167,22 @@ void MenuCorParedeV(int op)
     ArmazenaBloco(30, 5, 0.5, op);
     glutPostRedisplay();
 }   
+
+void mudaVisao(unsigned char key, int x, int y){
+    if(key == 'w'){
+        viewY += 0.1;
+    }
+    if(key == 's'){
+        viewY -= 0.1;
+    }
+    if(key == 'a'){
+        viewX -= 0.1;
+    }
+    if(key == 'd'){
+        viewX += 0.1;        
+    } 
+    glutPostRedisplay();       
+}
 
 void CriaMenu() 
 {
@@ -265,6 +282,8 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
     glLoadIdentity();
     glFrustum (-win, win, -win, win, 1, win);
     glMatrixMode (GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(viewX,viewY,viewZ,0.0,0.0,-1.0, 0.0,1.0,0.0);   
 }
 
 int main(int argc, char** argv){
@@ -276,6 +295,7 @@ int main(int argc, char** argv){
     glutCreateWindow("Exemplo de Menu e Exibição de Caracteres");
     glutPassiveMotionFunc(MoveMouse);    
     glutMouseFunc(GerenciaMouse);
+    glutKeyboardFunc(mudaVisao);
     glutDisplayFunc(Desenha);   
     glutReshapeFunc(AlteraTamanhoJanela); 
     glutSpecialFunc(TeclasEspeciais); 
