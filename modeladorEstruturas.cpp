@@ -23,6 +23,18 @@ GLdouble viewX = 0.0, viewY = 0.0, viewZ = 0.0;
 vector < pair<int, forma> > formas;
 
 
+void Inicializa (void)
+{   
+    glClearColor(184.0/255, 212.0/255, 245.0/255, 1.0f);
+    win = 100;
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum (-win, win, -win, win, 1, win);
+    glMatrixMode (GL_MODELVIEW);    
+
+}
+
+// Mostra a profundidade 
 void DesenhaTexto(char *string) 
 {  
   	glPushMatrix();
@@ -34,6 +46,47 @@ void DesenhaTexto(char *string)
 	glPopMatrix();
 }
 
+// Keyboard function para alterar a posição da câmera
+void mudaVisao(unsigned char key, int x, int y){
+    if(key == 'w'){
+        viewY += 0.001;
+    }
+    else if(key == 's'){
+        viewY -= 0.001;
+    }
+    else if(key == 'a'){
+        viewX -= 0.001;
+    }
+    else if(key == 'd'){
+        viewX += 0.001;        
+    } 
+    glutPostRedisplay();       
+}
+
+// Passive Motion function para pegar a coordenada do mouse normalizada 
+void MoveMouse(int x, int y)
+{
+     coordX = -100.0 + 200.0 * (double)x / (double)view_w; 
+     coordY = 100.0 - 200.0 * (double)y / (double)view_h;   
+     glutPostRedisplay();
+}
+
+//Specialkey function para alterar a profundidade do desenho (altera a coordenada Z)
+void TeclasEspeciais(int key, int x, int y)
+{
+    if(key == GLUT_KEY_UP) {
+           zAtual -= 0.1;
+           if (zAtual < -win) zAtual = -win;
+    }
+    if(key == GLUT_KEY_DOWN) {
+           zAtual += 0.1;
+           if (zAtual > -1.0) zAtual = -1;
+    }
+    sprintf(texto, "Profundidade: %0.2f", zAtual);           
+    glutPostRedisplay();
+}
+
+// Função para armazenar uma primitiva no vetor de formas
 void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
     forma bloco;
     bloco.vertices = { 
@@ -84,6 +137,7 @@ void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
     formas.push_back(make_pair(0, bloco));
 }
 
+// Desenha um hexaedro na cena
 void DesenhaBloco(int i)
 {   
     forma bloco = formas[i].second;
@@ -97,24 +151,16 @@ void DesenhaBloco(int i)
    
 }
 
-void Inicializa (void)
-{   
-    glClearColor(184.0/255, 212.0/255, 245.0/255, 1.0f);
-    win = 100;
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glFrustum (-win, win, -win, win, 1, win);
-    glMatrixMode (GL_MODELVIEW);    
-
-}
-
 void Desenha(void)
 {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    // Atualiza a câmera com base nos parâmetros viewX, viewY e viewZ
     gluLookAt(viewX,viewY,viewZ,0.0,0.0,-1.0, 0.0,1.0,0.0);  
-    glClear(GL_COLOR_BUFFER_BIT);                
+    glClear(GL_COLOR_BUFFER_BIT);
+    // Percorre o vetor de formas todas as vezes que o display for chamado                
     for(int i=0; i<formas.size(); i++){
+    	// Se a forma for um hexaedro, chama a função DesenhaBloco
         if(formas[i].first == 0){
             DesenhaBloco(i);
         }
@@ -128,9 +174,11 @@ void Desenha(void)
 
 void MenuPrincipal(int op)
 {
+	// Remove a última forma do vetor de formas (Desfazer)
     if(op == 0 && formas.size() > 0){
         formas.pop_back();        
     }
+    // Centraliza a câmera
     else if(op == 1){
     	viewY = 0.0;
 		viewX = 0.0;
@@ -171,22 +219,6 @@ void MenuCorParedeV(int op)
     ArmazenaBloco(30, 5, 0.5, op);
     glutPostRedisplay();
 }   
-
-void mudaVisao(unsigned char key, int x, int y){
-    if(key == 'w'){
-        viewY += 0.001;
-    }
-    else if(key == 's'){
-        viewY -= 0.001;
-    }
-    else if(key == 'a'){
-        viewX -= 0.001;
-    }
-    else if(key == 'd'){
-        viewX += 0.001;        
-    } 
-    glutPostRedisplay();       
-}
 
 void CriaMenu() 
 {
@@ -244,13 +276,7 @@ void CriaMenu()
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
-void MoveMouse(int x, int y)
-{
-     coordX = -100.0 + 200.0 * (double)x / (double)view_w; 
-     coordY = 100.0 - 200.0 * (double)y / (double)view_h;   
-     glutPostRedisplay();
-}
-
+// Mouse function para criação do menu com o botão direito
 void GerenciaMouse(int button, int state, int x, int y)
 {        
     if (button == GLUT_RIGHT_BUTTON){
@@ -261,20 +287,7 @@ void GerenciaMouse(int button, int state, int x, int y)
     } 
 }
 
-void TeclasEspeciais(int key, int x, int y)
-{
-    if(key == GLUT_KEY_UP) {
-           zAtual -= 0.1;
-           if (zAtual < -win) zAtual = -win;
-    }
-    if(key == GLUT_KEY_DOWN) {
-           zAtual += 0.1;
-           if (zAtual > -1.0) zAtual = -1;
-    }
-    sprintf(texto, "Profundidade: %0.2f", zAtual);           
-    glutPostRedisplay();
-}
-
+// Função de reshape
 void AlteraTamanhoJanela(GLsizei w, GLsizei h)
 { 
     // Especifica as dimensões da Viewport
