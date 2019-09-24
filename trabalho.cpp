@@ -19,7 +19,7 @@ GLint view_w, view_h;
 float coordX = 0, coordY = 0;
 float lado = 20;
 float zAtual = -1;
-GLdouble viewX = 0.0, viewY = 0.0, viewZ = -1.0;
+GLdouble viewX = 0.0, viewY = 0.0, viewZ = 0.0;
 vector < pair<int, forma> > formas;
 
 
@@ -104,9 +104,7 @@ void Inicializa (void)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glFrustum (-win, win, -win, win, 1, win);
-    glMatrixMode (GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(viewX,viewY,viewZ,0.0,0.0,-1.0, 0.0,1.0,0.0);    
+    glMatrixMode (GL_MODELVIEW);    
 
 }
 
@@ -114,6 +112,7 @@ void Desenha(void)
 {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    gluLookAt(viewX,viewY,viewZ,0.0,0.0,-1.0, 0.0,1.0,0.0);  
     glClear(GL_COLOR_BUFFER_BIT);                
     for(int i=0; i<formas.size(); i++){
         if(formas[i].first == 0){
@@ -122,17 +121,22 @@ void Desenha(void)
     }     
 
     glColor3f(0.0f, 0.0f, 0.0f);
-     DesenhaTexto(texto);
-     glFlush ();
-     glutSwapBuffers();
+	DesenhaTexto(texto);
+	glFlush ();
+	glutSwapBuffers();
 }
 
 void MenuPrincipal(int op)
 {
     if(op == 0 && formas.size() > 0){
-        formas.pop_back();
-        glutPostRedisplay();        
+        formas.pop_back();        
     }
+    else if(op == 1){
+    	viewY = 0.0;
+		viewX = 0.0;
+		viewZ = 0.0;
+    }
+    glutPostRedisplay();
 }
 
 void MenuPrimitiva(int op){
@@ -170,16 +174,16 @@ void MenuCorParedeV(int op)
 
 void mudaVisao(unsigned char key, int x, int y){
     if(key == 'w'){
-        viewY += 0.1;
+        viewY += 0.001;
     }
-    if(key == 's'){
-        viewY -= 0.1;
+    else if(key == 's'){
+        viewY -= 0.001;
     }
-    if(key == 'a'){
-        viewX -= 0.1;
+    else if(key == 'a'){
+        viewX -= 0.001;
     }
-    if(key == 'd'){
-        viewX += 0.1;        
+    else if(key == 'd'){
+        viewX += 0.001;        
     } 
     glutPostRedisplay();       
 }
@@ -235,6 +239,7 @@ void CriaMenu()
     menu = glutCreateMenu(MenuPrincipal);
     glutAddSubMenu("Primitivas",primitivas);
     glutAddMenuEntry("Desfazer", 0);
+    glutAddMenuEntry("Centraliza Camera", 1);
     
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -281,9 +286,6 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glFrustum (-win, win, -win, win, 1, win);
-    glMatrixMode (GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(viewX,viewY,viewZ,0.0,0.0,-1.0, 0.0,1.0,0.0);   
 }
 
 int main(int argc, char** argv){
@@ -297,7 +299,7 @@ int main(int argc, char** argv){
     glutMouseFunc(GerenciaMouse);
     glutKeyboardFunc(mudaVisao);
     glutDisplayFunc(Desenha);   
-    glutReshapeFunc(AlteraTamanhoJanela); 
+    glutReshapeFunc(AlteraTamanhoJanela);
     glutSpecialFunc(TeclasEspeciais); 
     Inicializa();
     glutMainLoop();
