@@ -7,7 +7,7 @@
 
 using namespace std;
 
-typedef struct forma{
+typedef struct forma {
     vector <GLfloat> vertices;
     vector <GLubyte> faces;
     GLfloat r, g, b;
@@ -23,64 +23,61 @@ GLdouble viewX = 0.0, viewY = 0.0, viewZ = 0.0;
 vector < pair<int, forma> > formas;
 
 
-void Inicializa (void)
-{   
+void Inicializa (void) {   
     glClearColor(184.0/255, 212.0/255, 245.0/255, 1.0f);
     win = 100;
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glFrustum (-win, win, -win, win, 1, win);
     glMatrixMode (GL_MODELVIEW);    
-
 }
 
 // Mostra a profundidade 
-void DesenhaTexto(char *string) 
-{  
+void DesenhaTexto(char* string) {  
   	glPushMatrix();
         // Posição no universo onde o texto será colocado          
         glRasterPos3f(-win,win-(win*0.08), -1); 
         // Exibe caracter a caracter
-        while(*string)
-             glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10,*string++); 
+        while (*string) {
+             glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10,*string++);
+        } 
 	glPopMatrix();
 }
 
 // Keyboard function para alterar a posição da câmera
 void mudaVisao(unsigned char key, int x, int y){
-    if(key == 'w'){
+    if (key == 'w') {
         viewY += 0.001;
-    }
-    else if(key == 's'){
+    } else if (key == 's') {
         viewY -= 0.001;
-    }
-    else if(key == 'a'){
+    } else if (key == 'a') {
         viewX -= 0.001;
-    }
-    else if(key == 'd'){
+    } else if (key == 'd') {
         viewX += 0.001;        
     } 
     glutPostRedisplay();       
 }
 
 // Passive Motion function para pegar a coordenada do mouse normalizada 
-void MoveMouse(int x, int y)
-{
+void MoveMouse(int x, int y) {
      coordX = -100.0 + 200.0 * (double)x / (double)view_w; 
      coordY = 100.0 - 200.0 * (double)y / (double)view_h;   
      glutPostRedisplay();
 }
 
 //Specialkey function para alterar a profundidade do desenho (altera a coordenada Z)
-void TeclasEspeciais(int key, int x, int y)
-{
+void TeclasEspeciais(int key, int x, int y) {
     if(key == GLUT_KEY_UP) {
            zAtual -= 0.1;
-           if (zAtual < -win) zAtual = -win;
+           if (zAtual < -win) {
+               zAtual = -win;
+           }
     }
     if(key == GLUT_KEY_DOWN) {
            zAtual += 0.1;
-           if (zAtual > -1.0) zAtual = -1;
+           if (zAtual > -1.0) { 
+               zAtual = -1;
+           }
     }
     sprintf(texto, "Profundidade: %0.2f", zAtual);           
     glutPostRedisplay();
@@ -108,27 +105,23 @@ void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
         6, 7, 3, 2        
     };
 
-    if(cor == 0){
+    if (cor == 0){
         bloco.r = 115.0/255;
         bloco.g = 106.0/255;
         bloco.b = 104.0/255;
-    }
-    else if(cor == 1){
+    } else if (cor == 1){
         bloco.r = 0.0;
         bloco.g = 0.0;
         bloco.b = 0.0;
-    }
-    else if(cor == 2){
+    } else if (cor == 2){
         bloco.r = 1.0;
         bloco.g = 1.0;
         bloco.b = 1.0;
-    }
-    else if(cor == 3){
+    } else if (cor == 3){
         bloco.r = 16.0/255;
         bloco.g = 18.0/255;
         bloco.b = 140.0/255;
-    }
-    else if(cor == 4){
+    } else if (cor == 4){
         bloco.r = 210.0/255;
         bloco.g = 78.0/255;
         bloco.b = 25.0/255;
@@ -138,8 +131,7 @@ void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
 }
 
 // Desenha um hexaedro na cena
-void DesenhaBloco(int i)
-{   
+void DesenhaBloco(int i) {   
     forma bloco = formas[i].second;
     glColor3f(bloco.r, bloco.g, bloco.b);    
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -151,21 +143,19 @@ void DesenhaBloco(int i)
    
 }
 
-void Desenha(void)
-{
+void Desenha(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     // Atualiza a câmera com base nos parâmetros viewX, viewY e viewZ
     gluLookAt(viewX,viewY,viewZ,0.0,0.0,-1.0, 0.0,1.0,0.0);  
     glClear(GL_COLOR_BUFFER_BIT);
     // Percorre o vetor de formas todas as vezes que o display for chamado                
-    for(int i=0; i<formas.size(); i++){
+    for (int i=0; i<formas.size(); ++i) {
     	// Se a forma for um hexaedro, chama a função DesenhaBloco
-        if(formas[i].first == 0){
+        if(formas[i].first == 0) {
             DesenhaBloco(i);
         }
     }     
-
     glColor3f(0.0f, 0.0f, 0.0f);
 	DesenhaTexto(texto);
 	glFlush ();
@@ -175,7 +165,7 @@ void Desenha(void)
 void MenuPrincipal(int op)
 {
 	// Remove a última forma do vetor de formas (Desfazer)
-    if(op == 0 && formas.size() > 0){
+    if(op == 0 && formas.size() > 0) {
         formas.pop_back();        
     }
     // Centraliza a câmera
@@ -187,41 +177,35 @@ void MenuPrincipal(int op)
     glutPostRedisplay();
 }
 
-void MenuPrimitiva(int op){
+void MenuPrimitiva(int op) {
 }
 
-void MenuCorViga(int op)
-{
+void MenuCorViga(int op) {
     ArmazenaBloco(10, 30, 0.1, op);
     glutPostRedisplay();
 }
 
-void MenuCorBloco(int op)
-{
+void MenuCorBloco(int op) {
     ArmazenaBloco(10, 10, 0.1, op);
     glutPostRedisplay();
 }
 
-void MenuCorColuna(int op)
-{
+void MenuCorColuna(int op) {
     ArmazenaBloco(30, 10, 0.05, op);
     glutPostRedisplay();
 }
 
-void MenuCorParede(int op)
-{
+void MenuCorParede(int op) {
     ArmazenaBloco(30, 60, 0.01, op);
     glutPostRedisplay();
 }   
 
-void MenuCorParedeV(int op)
-{
+void MenuCorParedeV(int op) {
     ArmazenaBloco(30, 5, 0.5, op);
     glutPostRedisplay();
 }   
 
-void CriaMenu() 
-{
+void CriaMenu() {
 
 
     int menu, primitivas, corBloco, corParedeH, corParedeV, corColuna, corViga;
@@ -277,19 +261,17 @@ void CriaMenu()
 }
 
 // Mouse function para criação do menu com o botão direito
-void GerenciaMouse(int button, int state, int x, int y)
-{        
-    if (button == GLUT_RIGHT_BUTTON){
-         if (state == GLUT_DOWN){
+void GerenciaMouse(int button, int state, int x, int y) {        
+    if (button == GLUT_RIGHT_BUTTON) {
+         if (state == GLUT_DOWN) {
             CriaMenu();  
             glutPostRedisplay();                                         
-         }
+        }
     } 
 }
 
 // Função de reshape
-void AlteraTamanhoJanela(GLsizei w, GLsizei h)
-{ 
+void AlteraTamanhoJanela(GLsizei w, GLsizei h) { 
     // Especifica as dimensões da Viewport
     glViewport(0, 0, w, h);
     view_w = w;
@@ -301,7 +283,7 @@ void AlteraTamanhoJanela(GLsizei w, GLsizei h)
     glFrustum (-win, win, -win, win, 1, win);
 }
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);    
