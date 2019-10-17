@@ -1,3 +1,3 @@
 # modelaEstrutura
 
-Comando para compilar: g++  modelaEstrutura.cpp -lglut -lGLU -lGL -lm -std=c++11
+Comando para compilar: g++  modeladorEstruturas.cpp -lglut -lGLU -lGL -lm -std=c++11
