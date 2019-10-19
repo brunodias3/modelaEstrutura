@@ -11,13 +11,13 @@ using namespace std;
 typedef struct forma {
     vector <GLfloat> vertices;
     vector <GLubyte> faces;
-    int tx, ty, tz;
+    float tx, ty, tz;
     GLfloat r, g, b;
 }forma;
 
 int num_linhas_grid = 40;
-GLdouble posX, posY, posZ;
 
+int selecionado = -1;
 
 vector < pair<int, forma> > formas;
 
@@ -59,41 +59,60 @@ void DesenhaGrid() {
     }
 }
 
-// Keyboard function para alterar a posição da câmera
-/*void mudaVisao(unsigned char key, int x, int y){
+void TrocaPrimitiva(int key, int x, int y) {
+	if (key == GLUT_KEY_RIGHT) {
+		cout << "oi" << endl;
+		selecionado++;
+		if (selecionado > formas.size() - 1) {
+			selecionado = 0;
+		}
+	} else if (key == GLUT_KEY_LEFT) {
+		selecionado--;
+		if (selecionado < 0) {
+			selecionado = formas.size() - 1;
+		}
+	}
+	glutPostRedisplay();
+}
+
+void ControlaTeclado(unsigned char key, int x, int y){
     if (key == 'w') {
-        viewY += 0.001;
+        formas[selecionado].second.tz -= 0.5;
     } else if (key == 's') {
-        viewY -= 0.001;
+        formas[selecionado].second.tz += 0.5;
     } else if (key == 'a') {
-        viewX -= 0.001;
+        formas[selecionado].second.tx -= 0.5;
     } else if (key == 'd') {
-        viewX += 0.001;        
+         formas[selecionado].second.tx += 0.5;     
+    } else if (key == 'q') {
+    	formas[selecionado].second.ty += 0.5;  
+    } else if (key == 'z') {
+    	formas[selecionado].second.ty -= 0.5;  
     }
     glutPostRedisplay();      
-}*/
+}
 
 // Passive Motion function para pegar a coordenada do mouse normalizada
-void MoveMouse(int x, int y) {
-    GLint viewport[4];
-    GLdouble modelview[16];
-    GLdouble projection[16];
-    GLfloat winX, winY, winZ;
+// void MoveMouse(int x, int y) {
+//     GLint viewport[4];
+//     GLdouble modelview[16];
+//     GLdouble projection[16];
+//     GLfloat winX, winY, winZ;
  
-    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
-    glGetDoublev( GL_PROJECTION_MATRIX, projection );
-    glGetIntegerv( GL_VIEWPORT, viewport );
+//     glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
+//     glGetDoublev( GL_PROJECTION_MATRIX, projection );
+//     glGetIntegerv( GL_VIEWPORT, viewport );
  
-    winX = (float)x;
-    winY = (float)viewport[3] - (float)y;
-    glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
+//     winX = (float)x;
+//     winY = (float)viewport[3] - (float)y;
+//     glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
  
-    gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
+//     gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
 
-    cout << posX << " " << posY << " " << posZ << endl;
+//     //cout << posX << " " << posY << " " << posZ << endl;
 
-    glutPostRedisplay();
-}
+//     glutPostRedisplay();
+// }
 
 // Função para armazenar uma primitiva no vetor de formas
 void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
@@ -142,6 +161,7 @@ void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
     }
 
     formas.push_back(make_pair(0, bloco));
+    selecionado++;
 }
 
 // Desenha um hexaedro na cena
@@ -163,7 +183,8 @@ void Desenha() {
     glLoadIdentity();
     glTranslatef(-13,0,-45);
     glRotatef(40,1,1,0);    
-    DesenhaGrid();
+    DesenhaGrid();    
+ 
     // Percorre o vetor de formas todas as vezes que o display for chamado                
     for (int i=0; i<formas.size(); ++i) {
      // Se a forma for um hexaedro, chama a função DesenhaBloco
@@ -179,7 +200,8 @@ void MenuPrincipal(int op)
 {
 // Remove a última forma do vetor de formas (Desfazer)
     if(op == 0 && formas.size() > 0) {
-        formas.pop_back();        
+        formas.pop_back();  
+        selecionado--;      
     }
 }
 
@@ -187,7 +209,7 @@ void MenuPrimitiva(int op) {
 }
 
 void MenuCorViga(int op) {
-    ArmazenaBloco(10, 30, 0.1, op);
+    ArmazenaBloco(1, 6, 1, op);
     glutPostRedisplay();
 }
 
@@ -272,7 +294,7 @@ void GerenciaMouse(int button, int state, int x, int y) {
             CriaMenu();  
             glutPostRedisplay();                                        
         }
-    }
+    } 
 }
 
 int main(int argc, char** argv) {
@@ -282,12 +304,12 @@ int main(int argc, char** argv) {
     glutInitWindowSize(800,600);
     glutInitWindowPosition(15,10);
     glutCreateWindow("Exemplo de Menu e Exibição de Caracteres");
-    glutPassiveMotionFunc(MoveMouse);    
+    //glutPassiveMotionFunc(MoveMouse);    
     glutMouseFunc(GerenciaMouse);
-    //glutKeyboardFunc(mudaVisao); 
+    glutKeyboardFunc(ControlaTeclado); 
     glutDisplayFunc(Desenha);  
     //glutReshapeFunc(AlteraTamanhoJanela);
-    //glutSpecialFunc(TeclasEspeciais);
+    glutSpecialFunc(TrocaPrimitiva);
     Inicializa();
     glutMainLoop();
 
