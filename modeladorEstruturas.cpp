@@ -19,6 +19,10 @@ int num_linhas_grid = 40;
 
 int selecionado = -1;
 
+GLfloat pos_lx = 10.0;
+GLfloat pos_ly = 3.0;
+GLfloat pos_lz = 7.0;
+
 vector < pair<int, forma> > formas;
 
 
@@ -28,17 +32,25 @@ void Inicializa (void) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(35,1.0f,0.1f,1000);
+
+    GLfloat light_position[] = {pos_lx, pos_ly, pos_lz, 0.0 };
+	glLightfv(GL_LIGHT0, GL_POSITION,light_position);
+	
+	GLfloat light_diffuse[]={1.0, 1.0, 1.0, 1.0};
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+
+	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+	glEnable(GL_COLOR_MATERIAL);
+
     glMatrixMode (GL_MODELVIEW);
     glEnable(GL_DEPTH_TEST);
+
+
 }
 
-/*void DesenhaCubo() {
-    glPushMatrix();
-    glColor3f(1,0,0);
-    glTranslatef(a,b,c);
-    glutSolidCube(2);
-    glPopMatrix();
-}*/
 
 void DesenhaGrid() {
     for (int i = 0; i < num_linhas_grid; i++) {
@@ -61,7 +73,6 @@ void DesenhaGrid() {
 
 void TrocaPrimitiva(int key, int x, int y) {
 	if (key == GLUT_KEY_RIGHT) {
-		cout << "oi" << endl;
 		selecionado++;
 		if (selecionado > formas.size() - 1) {
 			selecionado = 0;
@@ -92,28 +103,6 @@ void ControlaTeclado(unsigned char key, int x, int y){
     glutPostRedisplay();      
 }
 
-// Passive Motion function para pegar a coordenada do mouse normalizada
-// void MoveMouse(int x, int y) {
-//     GLint viewport[4];
-//     GLdouble modelview[16];
-//     GLdouble projection[16];
-//     GLfloat winX, winY, winZ;
- 
-//     glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
-//     glGetDoublev( GL_PROJECTION_MATRIX, projection );
-//     glGetIntegerv( GL_VIEWPORT, viewport );
- 
-//     winX = (float)x;
-//     winY = (float)viewport[3] - (float)y;
-//     glReadPixels( x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ );
- 
-//     gluUnProject( winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
-
-//     //cout << posX << " " << posY << " " << posZ << endl;
-
-//     glutPostRedisplay();
-// }
-
 // Função para armazenar uma primitiva no vetor de formas
 void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
     forma bloco;
@@ -143,13 +132,9 @@ void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
         bloco.g = 106.0/255;
         bloco.b = 104.0/255;
     } else if (cor == 1) {
-        bloco.r = 0.0;
-        bloco.g = 0.0;
-        bloco.b = 0.0;
-    } else if (cor == 2) {
-        bloco.r = 1.0;
-        bloco.g = 1.0;
-        bloco.b = 1.0;
+        bloco.r = 35.0/255;
+        bloco.g = 37.0/255;
+        bloco.b = 42.0/255;
     } else if (cor == 3) {
         bloco.r = 16.0/255;
         bloco.g = 18.0/255;
@@ -179,11 +164,22 @@ void DesenhaBloco(int i) {
 }
 
 void Desenha() {
+	glEnable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     glTranslatef(-13,0,-45);
     glRotatef(40,1,1,0);    
-    DesenhaGrid();    
+    DesenhaGrid();
+
+    glColor3f(0.0, 0.0, 0.0);
+    //desenha quadrado da luz
+	glBegin(GL_POLYGON);
+		glVertex3f(pos_lx, pos_ly, pos_lz);
+		glVertex3f(pos_lx+0.5, pos_ly+0.5, pos_lz);
+		glVertex3f(pos_lx+0.5, pos_ly, pos_lz);
+		glVertex3f(pos_lx, pos_ly-0.5, pos_lz);
+	glEnd();
+
  
     // Percorre o vetor de formas todas as vezes que o display for chamado                
     for (int i=0; i<formas.size(); ++i) {
@@ -209,7 +205,7 @@ void MenuPrimitiva(int op) {
 }
 
 void MenuCorViga(int op) {
-    ArmazenaBloco(1, 6, 1, op);
+    ArmazenaBloco(1, 3, 1, op);
     glutPostRedisplay();
 }
 
@@ -224,12 +220,12 @@ void MenuCorColuna(int op) {
 }
 
 void MenuCorParede(int op) {
-    ArmazenaBloco(6, 6, 0.1, op);
+    ArmazenaBloco(6, 3, 0.1, op);
     glutPostRedisplay();
 }  
 
 void MenuCorParedeV(int op) {
-    ArmazenaBloco(6, 0.3, 5, op);
+    ArmazenaBloco(6, 0.3, 2.5, op);
     glutPostRedisplay();
 }  
 
@@ -241,35 +237,30 @@ void CriaMenu() {
     corBloco = glutCreateMenu(MenuCorBloco);
     glutAddMenuEntry("Cinza Concreto", 0);
     glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Branco", 2);
     glutAddMenuEntry("Azul", 3);
     glutAddMenuEntry("Vermelho", 4);
 
     corColuna = glutCreateMenu(MenuCorColuna);
     glutAddMenuEntry("Cinza Concreto", 0);
     glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Branco", 2);
     glutAddMenuEntry("Azul", 3);
     glutAddMenuEntry("Vermelho", 4);
 
     corParedeH = glutCreateMenu(MenuCorParede);
     glutAddMenuEntry("Cinza Concreto", 0);
     glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Branco", 2);
     glutAddMenuEntry("Azul", 3);
     glutAddMenuEntry("Vermelho", 4);        
 
     corParedeV = glutCreateMenu(MenuCorParedeV);
     glutAddMenuEntry("Cinza Concreto", 0);
     glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Branco", 2);
     glutAddMenuEntry("Azul", 3);
     glutAddMenuEntry("Vermelho", 4);
 
     corViga = glutCreateMenu(MenuCorViga);
     glutAddMenuEntry("Cinza Concreto", 0);
     glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Branco", 2);
     glutAddMenuEntry("Azul", 3);
     glutAddMenuEntry("Vermelho", 4);      
 
@@ -300,7 +291,7 @@ void GerenciaMouse(int button, int state, int x, int y) {
 int main(int argc, char** argv) {
 
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE);    
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);    
     glutInitWindowSize(800,600);
     glutInitWindowPosition(15,10);
     glutCreateWindow("Exemplo de Menu e Exibição de Caracteres");
