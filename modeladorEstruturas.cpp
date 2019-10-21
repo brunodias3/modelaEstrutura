@@ -74,7 +74,6 @@ void Inicializa (void) {
   	carregaTextura(4, "texturas/madeira.bmp");
   	carregaTextura(5, "texturas/azulejo_marmore.bmp");
   	carregaTextura(6, "texturas/azulejo_ceramica.bmp");
-  	carregaTextura(7, "texturas/porta.bmp");
 
 	glEnable(GL_TEXTURE_2D);
 
@@ -286,7 +285,7 @@ void MenuTextParedeV(int op) {
 } 
 
 void MenuTextTeto(int op) {
-	ArmazenaBloco(0.1, 4, 5, op, 2);
+	ArmazenaBloco(0.4, 4, 5, op, 2);
     glutPostRedisplay();	
 }
 
