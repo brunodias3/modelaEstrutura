@@ -5,26 +5,41 @@
 #include <stdio.h>
 #include <vector>
 #include <utility>
+#include "load_bmp.h"
 
 using namespace std;
 
 typedef struct forma {
     vector <GLfloat> vertices;
     vector <GLubyte> faces;
+    vector <GLfloat> normais;
+    vector <GLfloat> textura;
+    int textop;
     float tx, ty, tz;
-    GLfloat r, g, b;
 }forma;
 
 int num_linhas_grid = 40;
 
 int selecionado = -1;
 
-GLfloat pos_lx = 10.0;
+GLfloat pos_lx = 8.0;
 GLfloat pos_ly = 3.0;
-GLfloat pos_lz = 7.0;
+GLfloat pos_lz = 5.0;
+GLuint textureID[10]; 
 
 vector < pair<int, forma> > formas;
 
+void carregaTextura(int posicao, const char* caminho){
+  	unsigned int width, height;
+  	unsigned char *data;
+
+  	glBindTexture(GL_TEXTURE_2D, textureID[posicao]);
+  	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  	data = loadBMP(caminho, width, height);
+  	glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);	
+
+}
 
 void Inicializa (void) {  
 
@@ -36,18 +51,32 @@ void Inicializa (void) {
     GLfloat light_position[] = {pos_lx, pos_ly, pos_lz, 0.0 };
 	glLightfv(GL_LIGHT0, GL_POSITION,light_position);
 	
-	GLfloat light_diffuse[]={1.0, 1.0, 1.0, 1.0};
+	GLfloat light_diffuse[]={1.0, 1.0, 1.0, 0.0};
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 	glEnable(GL_COLOR_MATERIAL);
+
+	glShadeModel (GL_SMOOTH);
 
     glMatrixMode (GL_MODELVIEW);
     glEnable(GL_DEPTH_TEST);
 
+  	glGenTextures(10, textureID);
+
+  	carregaTextura(0, "texturas/concreto.bmp");
+  	carregaTextura(1, "texturas/tijolos.bmp");
+  	carregaTextura(2, "texturas/tijolos_xadrez.bmp");
+  	carregaTextura(3, "texturas/pedras.bmp");
+  	carregaTextura(4, "texturas/madeira.bmp");
+  	carregaTextura(5, "texturas/azulejo_marmore.bmp");
+  	carregaTextura(6, "texturas/azulejo_ceramica.bmp");
+  	carregaTextura(7, "texturas/porta.bmp");
+
+	glEnable(GL_TEXTURE_2D);
 
 }
 
@@ -96,25 +125,25 @@ void ControlaTeclado(unsigned char key, int x, int y){
     } else if (key == 'd') {
          formas[selecionado].second.tx += 0.5;     
     } else if (key == 'q') {
-    	formas[selecionado].second.ty += 0.5;  
+    	formas[selecionado].second.ty += 0.25;  
     } else if (key == 'z') {
-    	formas[selecionado].second.ty -= 0.5;  
+    	formas[selecionado].second.ty -= 0.25;  
     }
     glutPostRedisplay();      
 }
 
 // Função para armazenar uma primitiva no vetor de formas
-void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
+void ArmazenaBloco(float altura, float largura, float profundidade, int op, int pv){
     forma bloco;
     bloco.vertices = {
-        (5 - largura/2), (0 + altura/2), 0,
-        (5 + largura/2), (0 + altura/2), 0,
-        (5 - largura/2), (0 - altura/2), 0,
-        (5 + largura/2), (0 - altura/2), 0,
-        (5 - largura/2), (0 + altura/2), 0-profundidade,
-        (5 + largura/2), (0 + altura/2), 0-profundidade,
-        (5 - largura/2), (0 - altura/2), 0-profundidade,
-        (5 + largura/2), (0 - altura/2), 0-profundidade
+        (5 - largura/2), (altura/2 + altura/2), 0,
+        (5 + largura/2), (altura/2 + altura/2), 0,
+        (5 - largura/2), (altura/2 - altura/2), 0,
+        (5 + largura/2), (altura/2 - altura/2), 0,
+        (5 - largura/2), (altura/2 + altura/2), 0-profundidade,
+        (5 + largura/2), (altura/2 + altura/2), 0-profundidade,
+        (5 - largura/2), (altura/2 - altura/2), 0-profundidade,
+        (5 + largura/2), (altura/2 - altura/2), 0-profundidade
     };
     bloco.faces = {
         0, 2, 3, 1,
@@ -124,29 +153,58 @@ void ArmazenaBloco(float altura, float largura, float profundidade, int cor){
         4, 5, 1, 0,
         6, 7, 3, 2        
     };
+    bloco.normais = {
+    	1.0, 1.0, 1.0,
+    	1.0, 1.0, 1.0,
+    	1.0, -1.0, 1.0,
+    	1.0, -1.0, 1.0,
+    	1.0, 1.0, -1.0,
+    	1.0, 1.0, -1.0,
+    	1.0, -1.0, -1.0,
+    	1.0, -1.0, -1.0
+    };
+    if (pv == 0) {
+	    bloco.textura = {
+	    	0.0, 1.0,
+	    	1.0, 1.0,
+	    	0.0, 0.0,
+	    	1.0, 0.0,
+	    	0.0, 1.0,
+	    	1.0, 1.0,
+	    	0.0, 0.0,
+	    	1.0, 0.0    	
+	    };
+	} else if (pv == 1) {
+		bloco.textura = {
+			1.0, 1.0,
+			0.0, 1.0,
+			1.0, 0.0,
+			0.0, 0.0,
+			0.0, 1.0,
+			1.0, 1.0,
+			0.0, 0.0,
+			1.0, 0.0
+		};
+	} else if (pv == 2){
+		bloco.textura = {
+			0.0, 1.0,
+			0.0, 0.0,
+			0.0, 1.0,
+			0.0, 0.0,
+			1.0, 1.0,
+			1.0, 0.0,
+			1.0, 1.0,
+			1.0, 0.0
+		};
+	}
     bloco.tx = 0;
     bloco.ty = 0;
     bloco.tz = 0;
-    if (cor == 0) {
-        bloco.r = 115.0/255;
-        bloco.g = 106.0/255;
-        bloco.b = 104.0/255;
-    } else if (cor == 1) {
-        bloco.r = 35.0/255;
-        bloco.g = 37.0/255;
-        bloco.b = 42.0/255;
-    } else if (cor == 3) {
-        bloco.r = 16.0/255;
-        bloco.g = 18.0/255;
-        bloco.b = 140.0/255;
-    } else if (cor == 4) {
-        bloco.r = 210.0/255;
-        bloco.g = 78.0/255;
-        bloco.b = 25.0/255;
-    }
+
+    bloco.textop = op;
 
     formas.push_back(make_pair(0, bloco));
-    selecionado++;
+    selecionado = formas.size()-1;
 }
 
 // Desenha um hexaedro na cena
@@ -154,10 +212,15 @@ void DesenhaBloco(int i) {
     forma bloco = formas[i].second;
     glPushMatrix();
     glTranslatef(bloco.tx,bloco.ty,bloco.tz);
-    glColor3f(bloco.r, bloco.g, bloco.b);    
+  	glBindTexture(GL_TEXTURE_2D, textureID[bloco.textop]); 
+  	glColor3f(115.0/255, 106.0/255, 104.0/255);   
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);  
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY); 
     glEnable(GL_DEPTH_TEST);  
     glVertexPointer(3, GL_FLOAT, 0, &(bloco.vertices[0]));
+    glNormalPointer(GL_FLOAT, 0, &(bloco.normais[0]));
+    glTexCoordPointer(2, GL_FLOAT, 0, &(bloco.textura[0]));
     glDrawElements(GL_QUADS, 24, GL_UNSIGNED_BYTE, &(bloco.faces[0]));
     glDisableClientState(GL_VERTEX_ARRAY);
     glPopMatrix();
@@ -172,13 +235,6 @@ void Desenha() {
     DesenhaGrid();
 
     glColor3f(0.0, 0.0, 0.0);
-    //desenha quadrado da luz
-	glBegin(GL_POLYGON);
-		glVertex3f(pos_lx, pos_ly, pos_lz);
-		glVertex3f(pos_lx+0.5, pos_ly+0.5, pos_lz);
-		glVertex3f(pos_lx+0.5, pos_ly, pos_lz);
-		glVertex3f(pos_lx, pos_ly-0.5, pos_lz);
-	glEnd();
 
  
     // Percorre o vetor de formas todas as vezes que o display for chamado                
@@ -204,75 +260,106 @@ void MenuPrincipal(int op)
 void MenuPrimitiva(int op) {
 }
 
-void MenuCorViga(int op) {
-    ArmazenaBloco(1, 3, 1, op);
+void MenuTextViga(int op) {
+    ArmazenaBloco(1, 3, 1, op, 0);
     glutPostRedisplay();
 }
 
-void MenuCorBloco(int op) {
-    ArmazenaBloco(1, 1, 1, op);
+void MenuTextBloco(int op) {
+    ArmazenaBloco(1, 1, 1, op, 0);
     glutPostRedisplay();
 }
 
-void MenuCorColuna(int op) {
-    ArmazenaBloco(6, 1, 1, op);
+void MenuTextColuna(int op) {
+    ArmazenaBloco(6, 1, 1, op, 0);
     glutPostRedisplay();
 }
 
-void MenuCorParede(int op) {
-    ArmazenaBloco(6, 3, 0.1, op);
+void MenuTextParede(int op) {
+    ArmazenaBloco(6, 4, 0.1, op, 0);
     glutPostRedisplay();
 }  
 
-void MenuCorParedeV(int op) {
-    ArmazenaBloco(6, 0.3, 2.5, op);
+void MenuTextParedeV(int op) {
+    ArmazenaBloco(6, 0.3, 5, op, 1);
     glutPostRedisplay();
-}  
+} 
+
+void MenuTextTeto(int op) {
+	ArmazenaBloco(0.1, 4, 5, op, 2);
+    glutPostRedisplay();	
+}
 
 void CriaMenu() {
 
 
-    int menu, primitivas, corBloco, corParedeH, corParedeV, corColuna, corViga;
+    int menu, estruturas, textBloco, textParedeH, textParedeV, textColuna, textViga, textTeto;
 
-    corBloco = glutCreateMenu(MenuCorBloco);
-    glutAddMenuEntry("Cinza Concreto", 0);
-    glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Azul", 3);
-    glutAddMenuEntry("Vermelho", 4);
+    textBloco = glutCreateMenu(MenuTextBloco);
+    glutAddMenuEntry("Concreto", 0);
+    glutAddMenuEntry("Tijolos", 1);
+    glutAddMenuEntry("Tijolos Xadrez", 2);
+    glutAddMenuEntry("Pedras", 3);
+	glutAddMenuEntry("Madeira", 4);    
+    glutAddMenuEntry("Azulejo Marmore", 5);
+    glutAddMenuEntry("Azulejo Azul Ceramica", 6); 
 
-    corColuna = glutCreateMenu(MenuCorColuna);
-    glutAddMenuEntry("Cinza Concreto", 0);
-    glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Azul", 3);
-    glutAddMenuEntry("Vermelho", 4);
+    textColuna = glutCreateMenu(MenuTextColuna);
+    glutAddMenuEntry("Concreto", 0);
+    glutAddMenuEntry("Tijolos", 1);
+    glutAddMenuEntry("Tijolos Xadrez", 2);
+    glutAddMenuEntry("Pedras", 3);
+	glutAddMenuEntry("Madeira", 4);    
+    glutAddMenuEntry("Azulejo Marmore", 5);
+    glutAddMenuEntry("Azulejo Azul Ceramica", 6); 
 
-    corParedeH = glutCreateMenu(MenuCorParede);
-    glutAddMenuEntry("Cinza Concreto", 0);
-    glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Azul", 3);
-    glutAddMenuEntry("Vermelho", 4);        
+    textParedeH = glutCreateMenu(MenuTextParede);
+    glutAddMenuEntry("Concreto", 0);
+    glutAddMenuEntry("Tijolos", 1);
+    glutAddMenuEntry("Tijolos Xadrez", 2);
+    glutAddMenuEntry("Pedras", 3);
+	glutAddMenuEntry("Madeira", 4);    
+    glutAddMenuEntry("Azulejo Marmore", 5);
+    glutAddMenuEntry("Azulejo Azul Ceramica", 6);       
 
-    corParedeV = glutCreateMenu(MenuCorParedeV);
-    glutAddMenuEntry("Cinza Concreto", 0);
-    glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Azul", 3);
-    glutAddMenuEntry("Vermelho", 4);
+    textParedeV = glutCreateMenu(MenuTextParedeV);
+    glutAddMenuEntry("Concreto", 0);
+    glutAddMenuEntry("Tijolos", 1);
+    glutAddMenuEntry("Tijolos Xadrez", 2);
+    glutAddMenuEntry("Pedras", 3);
+	glutAddMenuEntry("Madeira", 4);    
+    glutAddMenuEntry("Azulejo Marmore", 5);
+    glutAddMenuEntry("Azulejo Azul Ceramica", 6); 
 
-    corViga = glutCreateMenu(MenuCorViga);
-    glutAddMenuEntry("Cinza Concreto", 0);
-    glutAddMenuEntry("Preto", 1);
-    glutAddMenuEntry("Azul", 3);
-    glutAddMenuEntry("Vermelho", 4);      
+    textViga = glutCreateMenu(MenuTextViga);
+    glutAddMenuEntry("Concreto", 0);
+    glutAddMenuEntry("Tijolos", 1);
+    glutAddMenuEntry("Tijolos Xadrez", 2);
+    glutAddMenuEntry("Pedras", 3);
+	glutAddMenuEntry("Madeira", 4);    
+    glutAddMenuEntry("Azulejo Marmore", 5);
+    glutAddMenuEntry("Azulejo Azul Ceramica", 6);    
 
-    primitivas = glutCreateMenu(MenuPrimitiva);
-    glutAddSubMenu("Bloco",corBloco);
-    glutAddSubMenu("Parede Horizontal", corParedeH);
-    glutAddSubMenu("Parede Vertical", corParedeV);    
-    glutAddSubMenu("Coluna", corColuna);
-    glutAddSubMenu("Viga", corViga);
+    textTeto = glutCreateMenu(MenuTextTeto);
+    glutAddMenuEntry("Concreto", 0);
+    glutAddMenuEntry("Tijolos", 1);
+    glutAddMenuEntry("Tijolos Xadrez", 2);
+    glutAddMenuEntry("Pedras", 3);
+	glutAddMenuEntry("Madeira", 4);    
+    glutAddMenuEntry("Azulejo Marmore", 5);
+    glutAddMenuEntry("Azulejo Azul Ceramica", 6);      
+
+    estruturas = glutCreateMenu(MenuPrimitiva);
+    glutAddSubMenu("Bloco",textBloco);
+    glutAddSubMenu("Parede Horizontal", textParedeH);
+    glutAddSubMenu("Parede Vertical", textParedeV);
+    glutAddSubMenu("Teto", textTeto);        
+    glutAddSubMenu("Coluna", textColuna);
+    glutAddSubMenu("Viga", textViga);
+
 
     menu = glutCreateMenu(MenuPrincipal);
-    glutAddSubMenu("Primitivas",primitivas);
+    glutAddSubMenu("Estruturas", estruturas);
     glutAddMenuEntry("Desfazer", 0);
    
     glutAttachMenu(GLUT_RIGHT_BUTTON);
